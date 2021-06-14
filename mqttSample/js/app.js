@@ -58,11 +58,11 @@ or in the "license" file accompanying this file. This file is distributed on an 
 
   /** controller of the app */
   function AppController(scope){
-    this.clientId = 'esp32';
-    this.endpoint = 'a1y3vnxyufqzra-ats.iot.eu-west-2.amazonaws.com';
-    this.accessKey = 'AKIAQCSSQ66HIHG4QX2E';
-    this.secretKey = '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';
-    this.regionName = 'eu-west-2';
+    this.clientId = 'x';
+    this.endpoint = 'x';
+    this.accessKey = 'x';
+    this.secretKey = 'x';
+    this.regionName = 'x';
     this.logs = new LogService();
     this.clients = new ClientControllerCache(scope, this.logs);
   }
