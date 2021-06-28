@@ -252,7 +252,7 @@ void aws_iot_task(void *param) {
         abort();
     }
 
-    const char *TOPIC = "test/10/esp32";
+    const char *TOPIC = "test/1/esp32";
     const int TOPIC_LEN = strlen(TOPIC);
 
     ESP_LOGI(TAG, "Subscribing...");
@@ -264,47 +264,43 @@ void aws_iot_task(void *param) {
 
     sprintf(cPayload, "%s : %d ", "hello from SDK", i);
 
-	typedef enum {
-		MESSAGE_TYPE_EEG = 0,
-	} msg_type_t;
-
 	typedef struct __attribute__((aligned(4), packed)) {
-		uint32_t msg_type;
-		uint32_t timestamp;
-		uint8_t unused[3];
-		uint8_t eeg_data_len;
-		uint8_t eeg_data[128];
+		uint16_t counter;
+		uint16_t user_id;
+		uint16_t channel_code;
+		uint16_t eeg_data_len;
+		int16_t eeg_data[1900];
 	} aws_msg_t;
 	
-	msg_type_t msgt;    
 	aws_msg_t msg;
-	msg.msg_type = MESSAGE_TYPE_EEG;
-	msg.timestamp = time(NULL);
-	msg.eeg_data_len = 128;
-	for (int k = 0; k < 128; k++) {
-		if (k % 2 == 0) {
-			msg.eeg_data[k] = 0;
-		}
-		else {
-			msg.eeg_data[k] = 1;
-		}
-	}
-	char str1[131] = {0};
-	strcpy(str1, "000");
-	for (int ii = 3; ii < 131;ii++) {
-		sprintf(&str1[strlen(str1)], "%hhu", msg.eeg_data[ii-3]);
-	}
-	char aws_msg[sizeof(msg)];
+	msg.counter = 1;
+	msg.user_id = 1;
+	msg.channel_code = 1;
+	msg.eeg_data_len = 45;
+	int16_t data[] = {10,20,51,44,48,56,56,41,20,15,16,17,18,19,15,16,17,18,19,20,15,16,17,18,19,20,50,25,30,31,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+	memcpy(msg.eeg_data,data,msg.eeg_data_len*2);
+	printf("%d\n",sizeof(msg));
 	
-	//sprintf(aws_msg, "%" PRIu32 "%" PRIu32 "%" PRIu8 "%s", msg.msg_type, msg.timestamp,msg.eeg_data_len,str1);
+	/*aws_msg_t* msg = (aws_msg_t*) malloc(sizeof(aws_msg_t));
+	msg->counter = 1;
+	msg->user_id = 1;
+	msg->channel_code = 1;
+	msg->eeg_data_len = 45;
+	int16_t data[] = {10,20,51,44,48,56,56,41,20,15,16,17,18,19,15,16,17,18,19,20,15,16,17,18,19,20,50,25,30,31,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+	memcpy(msg->eeg_data,data,msg->eeg_data_len*2);
+	printf("%d\n",sizeof(*msg));
+	printf("%d\n",sizeof(aws_msg_t));*/
+	
     paramsQOS0.qos = QOS0;
-	paramsQOS0.payload = (void *)&msg;
+	paramsQOS0.payload = (void *) &msg;
     paramsQOS0.isRetained = 0;
 	paramsQOS0.payloadLen = sizeof(msg);
 
-    paramsQOS1.qos = QOS1;
+	//free(msg);
+	
+    /*paramsQOS1.qos = QOS1;
     paramsQOS1.payload = (void *) cPayload;
-    paramsQOS1.isRetained = 0;
+    paramsQOS1.isRetained = 0;*/
 
     while((NETWORK_ATTEMPTING_RECONNECT == rc || NETWORK_RECONNECTED == rc || SUCCESS == rc)) {
 
@@ -316,8 +312,9 @@ void aws_iot_task(void *param) {
         }
 
         ESP_LOGI(TAG, "Stack remaining for task '%s' is %d bytes", pcTaskGetTaskName(NULL), uxTaskGetStackHighWaterMark(NULL));
-        vTaskDelay(10000 / portTICK_RATE_MS);
-        //	
+        vTaskDelay(5000 / portTICK_RATE_MS);
+
+		
         //paramsQOS0.payloadLen = strlen(msg.eeg_data);
         
         rc = aws_iot_mqtt_publish(&client, TOPIC, TOPIC_LEN, &paramsQOS0);
@@ -367,5 +364,5 @@ void app_main()
     ESP_ERROR_CHECK( err );
 
     initialise_wifi();
-    xTaskCreatePinnedToCore(&aws_iot_task, "aws_iot_task", 9216, NULL, 5, NULL, 1);
+    xTaskCreatePinnedToCore(&aws_iot_task, "aws_iot_task", 30000, NULL, 5, NULL, 1);
 }
