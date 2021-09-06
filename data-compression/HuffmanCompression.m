@@ -1,0 +1,12 @@
+function [cr, flag] = HuffmanCompression(msg)
+[M,N] = size(msg);
+data_row = reshape(msg,M*N,1);
+tbl = tabulate(data_row);
+symbols = tbl(:,1);
+probs = tbl(:,3)/100;
+dict = huffmandict(symbols, probs);
+code = huffmanenco(data_row,dict);
+dec_data_row = huffmandeco(code,dict);
+decMsg = reshape(dec_data_row, M, N);
+cr = length(data_row) * 2 / (length(dict)*2*2 + length(code)/8);
+flag = isequal(msg,decMsg);
